@@ -1,11 +1,38 @@
 {
   "name": "toolscan",
-  "version": "1.1.0",
-  "description": "Cross-platform tool discovery: PATH + XDG + common dirs, JSON out, zero dependencies",
+  "version": "2.0.0",
+  "description": "Cross-platform tool discovery: PATH + XDG + common install roots. Bounded, truthful, JSON out. TypeScript + Effect core, zero-dependency runtime bundle.",
   "type": "module",
-  "bin": { "toolscan": "toolscan.mjs" },
-  "files": ["toolscan.mjs"],
-  "scripts": { "test": "node --test test.mjs" },
-  "engines": { "node": ">=18" },
-  "license": "MIT"
+  "bin": {
+    "toolscan": "dist/toolscan.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "pretest": "npm run build",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "discovery",
+    "scanner",
+    "path",
+    "xdg",
+    "cli",
+    "tooling"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "effect": "^3.15.0",
+    "esbuild": "^0.25.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  }
 }

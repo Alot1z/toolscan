@@ -1,0 +1,29 @@
+{
+  "format": "toolscan-snapshot/1",
+  "date": "2026-09-03T00:00:00.000Z",
+  "platform": "win32",
+  "truncated": false,
+  "pathEntries": 2,
+  "tools": [
+    {
+      "name": "claude",
+      "path": "E:\\npm-global\\claude.cmd",
+      "source": "PATH"
+    },
+    {
+      "name": "codex",
+      "path": "E:\\npm-global\\codex.cmd",
+      "source": "PATH"
+    },
+    {
+      "name": "node",
+      "path": "C:\\Program Files\\nodejs\\node.exe",
+      "source": "PATH"
+    },
+    {
+      "name": "uv",
+      "path": "C:\\Users\\me\\.local\\bin\\uv.exe",
+      "source": "root"
+    }
+  ]
+}
