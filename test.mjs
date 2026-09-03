@@ -113,3 +113,64 @@ test('--quiet prints names only', () => {
   assert.ok(names.includes('quiet-tool'));
   assert.ok(!r.out.includes('"ok"'), 'not JSON');
 });
+
+test('snapshot writes a loadable file', () => {
+  const d = tmpdir();
+  mkTool(d, 'snap-tool');
+  const out = path.join(tmpdir(), 'snap.json');
+  const r = run(['snapshot', '--out', out], withPath(d));
+  assert.equal(r.rc, 0);
+  const snap = JSON.parse(fs.readFileSync(out, 'utf8'));
+  assert.equal(snap.format, 'toolscan-snapshot/1');
+  assert.ok(snap.tools.some((t) => t.name === 'snap-tool'));
+});
+
+test('diff reports added/removed/changed and exits 1', () => {
+  const d1 = tmpdir(), d2 = tmpdir();
+  mkTool(d1, 'gone-tool');
+  mkTool(d1, 'shared-tool'); // exists in a at d1; moved to d2 before b
+  const a = path.join(tmpdir(), 'a.json');
+  assert.equal(run(['snapshot', '--out', a], withPath(d1)).rc, 0);
+  mkTool(d2, 'new-tool');
+  fs.rmSync(path.join(d1, isWin ? 'gone-tool.cmd' : 'gone-tool')); // gone in b
+  fs.renameSync(
+    path.join(d1, isWin ? 'shared-tool.cmd' : 'shared-tool'),
+    path.join(d2, isWin ? 'shared-tool.cmd' : 'shared-tool')
+  );
+  const b = path.join(tmpdir(), 'b.json');
+  assert.equal(run(['snapshot', '--out', b], withPath(d1, d2)).rc, 0);
+  const r = run(['diff', a, b]);
+  assert.equal(r.rc, 1, 'diff exits 1 when different');
+  const j = JSON.parse(r.out);
+  assert.ok(j.removed.some((t) => t.name === 'gone-tool'));
+  assert.ok(j.added.some((t) => t.name === 'new-tool'));
+  assert.ok(j.changed.some((t) => t.name === 'shared-tool'));
+  // identical diff exits 0
+  const r2 = run(['diff', a, a]);
+  assert.equal(r2.rc, 0);
+});
+
+test('check resolves a tool and exits 0/1', () => {
+  const d = tmpdir();
+  mkTool(d, 'check-tool');
+  const found = run(['check', 'check-tool'], withPath(d));
+  assert.equal(found.rc, 0);
+  assert.ok(found.out.trim().endsWith(isWin ? 'check-tool.cmd' : 'check-tool'));
+  const notFound = run(['check', 'nope-none'], withPath(d));
+  assert.equal(notFound.rc, 1);
+});
+
+test('missing reports absent names and exits 1; all-present exits 0', () => {
+  const d = tmpdir();
+  mkTool(d, 'have-tool');
+  const manifest = path.join(tmpdir(), 'manifest.txt');
+  fs.writeFileSync(manifest, 'have-tool, absent-one\nabsent-two\n');
+  const r = run(['missing', '--from', manifest], withPath(d));
+  assert.equal(r.rc, 1);
+  assert.deepEqual(JSON.parse(r.out).missing, ['absent-one', 'absent-two']);
+  const ok = run(['missing', '--from', manifest], withPath(d));
+  fs.writeFileSync(manifest, 'have-tool\n');
+  const r2 = run(['missing', '--from', manifest], withPath(d));
+  assert.equal(r2.rc, 0);
+  assert.equal(JSON.parse(r2.out).ok, true);
+});

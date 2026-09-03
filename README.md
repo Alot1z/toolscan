@@ -26,16 +26,20 @@ with nothing else carried over.
 ## Usage
 
 ```
-toolscan                    # JSON: all tools (PATH first, then roots)
-toolscan --name 'git*'      # wildcard filter, case-insensitive
-toolscan --roots ~/bin,/opt/x/bin --depth 1
-toolscan --no-path          # roots only
-toolscan --quiet            # names only, one per line
-toolscan --max-files 5000   # tighten the budget
+toolscan                          # JSON: all tools (PATH first, then roots)
+toolscan list                     # names only, one per line
+toolscan snapshot --out before.json   # save a scan for later comparison
+toolscan diff before.json after.json  # added / removed / moved tools; exit 1
+                                        # when anything changed (CI-friendly)
+toolscan check git                 # print the resolved path; exit 0/1
+toolscan missing --from tools.txt  # report names from a list not on the system
 ```
 
-Exit codes: `0` full scan, `2` scan truncated by a budget (truthful signal —
-the output says so too).
+Shared flags: `--name 'git*'` (wildcard filter), `--roots a,b` (extra roots),
+`--no-path`, `--depth N`, `--max-files N`, `--max-ms N`, `--quiet`.
+
+Exit codes: `0` clean, `1` command found a difference (diff/missing/check),
+`2` scan truncated by a budget (truthful signal — the output says so too).
 
 ## Semantics
 

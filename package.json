@@ -1,6 +1,6 @@
 {
   "name": "toolscan",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Cross-platform tool discovery: PATH + XDG + common dirs, JSON out, zero dependencies",
   "type": "module",
   "bin": { "toolscan": "toolscan.mjs" },
