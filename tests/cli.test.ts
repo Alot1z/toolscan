@@ -1,11 +1,36 @@
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const DIST = resolve("dist/toolscan.mjs");
+
+// The spawned CLI IS this host — it has no platform override, so discovery
+// follows the native rules of the process running the suite. Windows finds
+// `*.cmd` launchers via PATHEXT (extension check); POSIX requires the X_OK
+// bit on a plain launcher name (no PATHEXT, so names keep any extension).
+// Hermetic fixtures therefore match the runner, which is exactly what the
+// CI matrix (ubuntu + windows) exercises on each platform.
+const IS_WIN = process.platform === "win32";
+
+/** Native launcher filename for THIS host. */
+function launcher(name: string): string {
+  return IS_WIN ? `${name}.cmd` : name;
+}
+
+/** Write an executable launcher fixture; on POSIX set the X_OK bit. */
+function putTool(bin: string, name: string, content = "x"): string {
+  const full = join(bin, launcher(name));
+  writeFileSync(full, content);
+  if (!IS_WIN) chmodSync(full, 0o755);
+  return full;
+}
+
+function rmTool(bin: string, name: string): void {
+  rmSync(join(bin, launcher(name)));
+}
 
 let root: string;
 let binA: string;
@@ -60,7 +85,7 @@ describe("toolscan CLI", () => {
   });
 
   it("scans to the v1 JSON contract", () => {
-    writeFileSync(join(binA, "tool1.cmd"), "x");
+    putTool(binA, "tool1");
 
     // --no-roots keeps the spawn hermetic: Windows re-injects the parent's
     // ProgramFiles into children whatever the env says, so the roots scan
@@ -72,23 +97,23 @@ describe("toolscan CLI", () => {
     expect(typeof out.elapsedMs).toBe("number");
     expect(out.truncated).toBe(false);
     expect(out.pathEntries).toBe(1);
-    expect(out.tools).toEqual([{ name: "tool1", path: join(binA, "tool1.cmd"), source: "PATH" }]);
+    expect(out.tools).toEqual([{ name: "tool1", path: join(binA, launcher("tool1")), source: "PATH" }]);
   });
 
   it("emits tab-separated text with --format text", () => {
-    writeFileSync(join(binA, "tool1.cmd"), "x");
+    putTool(binA, "tool1");
 
     const r = cli(["--format", "text", "--no-roots"]);
     expect(r.status).toBe(0);
-    expect(r.stdout.trim()).toBe(`tool1\t${join(binA, "tool1.cmd")}\tPATH`);
+    expect(r.stdout.trim()).toBe(`tool1\t${join(binA, launcher("tool1"))}\tPATH`);
   });
 
   it("check prints the resolved path (exit 0) and misses cleanly (exit 1)", () => {
-    writeFileSync(join(binA, "tool1.cmd"), "x");
+    putTool(binA, "tool1");
 
     const hit = cli(["check", "tool1"]);
     expect(hit.status).toBe(0);
-    expect(hit.stdout.trim()).toBe(join(binA, "tool1.cmd"));
+    expect(hit.stdout.trim()).toBe(join(binA, launcher("tool1")));
 
     const miss = cli(["check", "no-such-tool"]);
     expect(miss.status).toBe(1);
@@ -96,8 +121,8 @@ describe("toolscan CLI", () => {
   });
 
   it("list prints names only", () => {
-    writeFileSync(join(binA, "a.cmd"), "x");
-    writeFileSync(join(binA, "b.cmd"), "x");
+    putTool(binA, "a");
+    putTool(binA, "b");
 
     const r = cli(["list", "--no-roots"]);
     expect(r.status).toBe(0);
@@ -105,7 +130,7 @@ describe("toolscan CLI", () => {
   });
 
   it("missing reports absent names and exits 1", () => {
-    writeFileSync(join(binA, "a.cmd"), "x");
+    putTool(binA, "a");
     const list = join(root, "tools.txt");
     writeFileSync(list, "a\nb,c\n");
 
@@ -115,7 +140,7 @@ describe("toolscan CLI", () => {
   });
 
   it("snapshot + diff: identical scans agree, a removed tool drifts", () => {
-    writeFileSync(join(binA, "a.cmd"), "x");
+    putTool(binA, "a");
     const base = join(root, "base.json");
 
     expect(cli(["snapshot", "--out", base, "--no-roots"]).status).toBe(0);
@@ -123,8 +148,8 @@ describe("toolscan CLI", () => {
     expect(cli(["diff", base, "--no-roots"]).status).toBe(0);
 
     // Remove a and add b: diff must exit 1 naming both.
-    rmSync(join(binA, "a.cmd"));
-    writeFileSync(join(binA, "b.cmd"), "x");
+    rmTool(binA, "a");
+    putTool(binA, "b");
     const diff = cli(["diff", base, "--no-roots"]);
     expect(diff.status).toBe(1);
     const out = JSON.parse(diff.stdout);
@@ -133,14 +158,14 @@ describe("toolscan CLI", () => {
   });
 
   it("drift rewrites the baseline and exits 1 when the machine changed", () => {
-    writeFileSync(join(binA, "a.cmd"), "x");
+    putTool(binA, "a");
     const base = join(root, "base.json");
     cli(["snapshot", "--out", base, "--no-roots"]);
 
     // Same state -> no drift, baseline rewritten (timestamp advances).
     expect(cli(["drift", "--baseline", base, "--no-roots"]).status).toBe(0);
 
-    writeFileSync(join(binA, "b.cmd"), "x");
+    putTool(binA, "b");
     const drift = cli(["drift", "--baseline", base, "--no-roots"]);
     expect(drift.status).toBe(1);
     expect(JSON.parse(drift.stdout).added.map((x: { name: string }) => x.name)).toEqual(["b"]);
@@ -150,7 +175,7 @@ describe("toolscan CLI", () => {
   });
 
   it("fail-closed: truncated check/missing exit 2 with a reason, never a silent negative", () => {
-    for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
+    for (let i = 0; i < 5; i++) putTool(binA, `t${i}`);
 
     // Without truncation, check misses cleanly with exit 1.
     const cleanMiss = cli(["check", "absent", "--no-roots", "--max-files", "100"]);
@@ -172,17 +197,17 @@ describe("toolscan CLI", () => {
   });
 
   it("fail-closed: scan output must conform to the documented schema before emission", () => {
-    writeFileSync(join(binA, "tool1.cmd"), "x");
+    putTool(binA, "tool1");
     const r = cli(["scan", "--no-roots"]);
     expect(r.status).toBe(0);
     const out = JSON.parse(r.stdout);
     // The audit gate ran inside the CLI: shape is exactly the documented one.
     expect(Object.keys(out).sort()).toEqual(["elapsedMs", "ok", "pathEntries", "tools", "truncated"]);
-    expect(out.tools[0]).toEqual({ name: "tool1", path: join(binA, "tool1.cmd"), source: "PATH" });
+    expect(out.tools[0]).toEqual({ name: "tool1", path: join(binA, launcher("tool1")), source: "PATH" });
   });
 
   it("doctor is ALL GREEN on a healthy machine surface and reports truncation as exit 2", () => {
-    writeFileSync(join(binA, "tool1.cmd"), "x");
+    putTool(binA, "tool1");
 
     const ok = cli(["doctor", "--no-roots"]);
     expect(ok.status).toBe(0);
@@ -191,14 +216,14 @@ describe("toolscan CLI", () => {
     expect(report.checks.map((c: { name: string }) => c.name)).toEqual(["schema", "paths-exist", "complete-scan"]);
 
     // Enough files to actually exhaust a --max-files 2 budget.
-    for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
+    for (let i = 0; i < 5; i++) putTool(binA, `t${i}`);
     const truncated = cli(["doctor", "--no-roots", "--max-files", "2"]);
     expect(truncated.status).toBe(2);
     expect(JSON.parse(truncated.stdout).truncated).toBe(true);
   });
 
   it("drift refuses to overwrite the baseline from a truncated scan (exit 2)", () => {
-    for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
+    for (let i = 0; i < 5; i++) putTool(binA, `t${i}`);
     const base = join(root, "base.json");
     cli(["snapshot", "--out", base, "--no-roots"]);
 

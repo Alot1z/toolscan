@@ -6113,14 +6113,14 @@ var splitPathString = (text, delim) => {
   const split = text.split(new RegExp(`\\s*${escape(delim)}\\s*`));
   return split;
 };
-var parsePrimitive = (text, path4, primitive, delimiter2, split) => {
+var parsePrimitive = (text, path4, primitive, delimiter, split) => {
   if (!split) {
     return pipe(primitive.parse(text), mapBoth({
       onFailure: prefixed(path4),
       onSuccess: of
     }));
   }
-  return pipe(splitPathString(text, delimiter2), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path4)));
+  return pipe(splitPathString(text, delimiter), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path4)));
 };
 var transpose = (array3) => {
   return Object.keys(array3[0]).map((column) => array3.map((row) => row[column]));
@@ -15275,9 +15275,10 @@ function isExecutable(file, ex) {
   }
 }
 function toolName(file, ex) {
-  const base = path.basename(file);
+  const p = ex ? path.win32 : path.posix;
+  const base = p.basename(file);
   if (!ex) return base;
-  const ext = path.extname(base).toLowerCase();
+  const ext = p.extname(base).toLowerCase();
   if (!ex.has(ext)) return base;
   const stripped = base.slice(0, -ext.length);
   return stripped === "." || stripped === ".." ? base : stripped;
@@ -15397,7 +15398,7 @@ function scan(opts = {}) {
     const tools = /* @__PURE__ */ new Map();
     let pathEntries = 0;
     if (!opts.noPath) {
-      for (const dir of (env.PATH || "").split(path.delimiter)) {
+      for (const dir of (env.PATH || "").split(platform === "win32" ? ";" : ":")) {
         if (!dir || Date.now() - started > maxMs) {
           if (dir) yield* Ref_exports.update(ref, (s) => ({ ...s, truncated: true }));
           break;

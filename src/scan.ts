@@ -100,9 +100,14 @@ export function isExecutable(file: string, ex: Set<string> | null): boolean {
 }
 
 export function toolName(file: string, ex: Set<string> | null): string {
-  const base = path.basename(file);
+  // Name semantics follow the DECLARED platform, not the host: an active
+  // extension set means win32 mode, so Windows basename rules apply even
+  // when a POSIX host runs the scan (hermetic injected-platform tests). On
+  // a native run declared === host, so this is identical to before.
+  const p = ex ? path.win32 : path.posix;
+  const base = p.basename(file);
   if (!ex) return base;
-  const ext = path.extname(base).toLowerCase();
+  const ext = p.extname(base).toLowerCase();
   if (!ex.has(ext)) return base;
   const stripped = base.slice(0, -ext.length);
   // A hostile launcher name ("..cmd", ".exe") must never yield a bare
@@ -262,7 +267,7 @@ export function scan(opts: ScanOptions = {}): Effect.Effect<ScanReport, never, n
     let pathEntries = 0;
 
     if (!opts.noPath) {
-      for (const dir of (env.PATH || "").split(path.delimiter)) {
+      for (const dir of (env.PATH || "").split(platform === "win32" ? ";" : ":")) {
         if (!dir || Date.now() - started > maxMs) {
           if (dir) yield* Ref.update(ref, (s) => ({ ...s, truncated: true }));
           break;

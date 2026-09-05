@@ -1,4 +1,4 @@
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
@@ -135,5 +135,53 @@ describe("scan", () => {
 
     expect(report.pathEntries).toBe(0);
     expect(report.tools.map((t) => t.name)).toEqual(["onroot"]);
+  });
+});
+
+// Native POSIX semantics are only assertable on a real POSIX host (the X_OK
+// bit cannot be probed faithfully on Windows). The ubuntu CI leg runs these;
+// they are skipped on the windows leg where win32-mode tests above hold.
+const posixOnly = process.platform === "win32" ? describe.skip : describe;
+
+posixOnly("scan — native POSIX semantics (X_OK bit, no extension stripping)", () => {
+  const env = (extra: Record<string, string> = {}): NodeJS.ProcessEnv => ({ PATH: "", ...extra });
+
+  it("finds chmod +x launchers on PATH and skips non-executables", async () => {
+    const binA = join(root, "binA");
+    mkdirSync(binA, { recursive: true });
+    const exe = join(binA, "toolA");
+    writeFileSync(exe, "#!/bin/sh\n");
+    chmodSync(exe, 0o755);
+    writeFileSync(join(binA, "toolB"), "x"); // never chmod'ed: must be skipped
+
+    const report = await run({ env: env({ PATH: binA }), platform: "linux", noRoots: true });
+
+    expect(report.tools.map((t) => t.name)).toEqual(["toolA"]);
+    expect(report.tools[0].path).toBe(exe);
+  });
+
+  it("keeps full launcher names (no extension stripping) on POSIX", async () => {
+    const binA = join(root, "binA");
+    mkdirSync(binA, { recursive: true });
+    writeFileSync(join(binA, "tool.cmd"), "x");
+    chmodSync(join(binA, "tool.cmd"), 0o755);
+
+    const report = await run({ env: env({ PATH: binA }), platform: "linux", noRoots: true });
+
+    // POSIX discovery has no PATHEXT: the reported name is the full basename.
+    expect(report.tools).toEqual([{ name: "tool.cmd", path: join(binA, "tool.cmd"), source: "PATH" }]);
+  });
+
+  it("finds executables under the POSIX home roots", async () => {
+    const home = join(root, "home");
+    const bin = join(home, ".local", "bin");
+    mkdirSync(bin, { recursive: true });
+    const exe = join(bin, "toolR");
+    writeFileSync(exe, "x");
+    chmodSync(exe, 0o755);
+
+    const report = await run({ env: env({ HOME: home }), platform: "linux", noPath: true });
+
+    expect(report.tools.some((t) => t.name === "toolR" && t.source === "root")).toBe(true);
   });
 });
