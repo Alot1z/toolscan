@@ -38,12 +38,14 @@ export function validateToolEntry(value: unknown): string[] {
     if (t.name.length > MAX_NAME_LENGTH) problems.push(`name exceeds ${MAX_NAME_LENGTH} chars`);
     if (/[/\\]/.test(t.name)) problems.push("name must not contain path separators");
     if (t.name === "." || t.name === "..") problems.push('name must not be "." or ".."');
+    if (t.name.includes("\0")) problems.push("name must not contain NUL bytes");
   }
   if (typeof t.path !== "string" || t.path.length === 0) {
     problems.push("path must be a non-empty string");
   } else {
     if (t.path.length > MAX_PATH_LENGTH) problems.push(`path exceeds ${MAX_PATH_LENGTH} chars`);
     if (!path.isAbsolute(t.path)) problems.push("path must be absolute");
+    if (t.path.includes("\0")) problems.push("path must not contain NUL bytes");
   }
   if (t.source !== "PATH" && t.source !== "root") problems.push('source must be "PATH" or "root"');
   return problems;

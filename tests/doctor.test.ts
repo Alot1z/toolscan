@@ -58,6 +58,14 @@ describe("validateToolEntry — the output contract, hostile payloads", () => {
     expect(validateToolEntry({ ...valid(), source: "everywhere" }).join(" ")).toMatch(/source must be/);
   });
 
+  it("rejects NUL bytes in name and path (B4 sweep: hostile-input decisive case)", () => {
+    // The B4 hostile-input sweep (2026-09-05) found the merged consumer
+    // parser accepts NUL-carrying paths; the toolscan contract must reject
+    // them EXPLICITLY, not incidentally via the absolute-path check.
+    expect(validateToolEntry({ ...valid(), path: "C:\\a\\b\0.cmd" }).join(" ")).toMatch(/NUL/);
+    expect(validateToolEntry({ ...valid(), name: "evil\0name" }).join(" ")).toMatch(/NUL/);
+  });
+
   it("toolName never yields a bare traversal name from a hostile launcher (producer pin)", () => {
     // A launcher literally named "..cmd" must keep its extension in reports
     // rather than degrade to "..".
