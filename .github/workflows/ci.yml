@@ -1,0 +1,55 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: test (${{ matrix.os }} / node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      # pretest rebuilds dist, then vitest runs the committed suite. The
+      # fixtures are native to the runner: PATHEXT/.cmd on Windows, the X_OK
+      # bit on extensionless launchers on Linux (tests/scan.test.ts also
+      # injects win32 mode to exercise Windows semantics on both hosts).
+      - run: npm test
+      - run: npm run typecheck
+
+  dist-sync:
+    name: dist is in sync with src
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # The committed bundle is the shipped artifact (consumers spawn
+      # dist/toolscan.mjs): any src change must land with its rebuilt dist in
+      # the same commit. A rebuild against the committed tree must be a
+      # byte-for-byte no-op (content compare — build chmods +x, so a raw
+      # `git diff` would always see a mode delta).
+      - run: npm run build
+      - run: |
+          git show HEAD:dist/toolscan.mjs > /tmp/committed-dist.mjs
+          cmp -s dist/toolscan.mjs /tmp/committed-dist.mjs && echo "dist is in sync with src" || {
+            echo "::error::dist/toolscan.mjs is out of sync with src — rebuild and commit dist/ with the src change";
+            exit 1;
+          }
