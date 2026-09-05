@@ -47,6 +47,14 @@ export const DEFAULT_DEPTH = 2;
 export const DEFAULT_MAX_MS = 8_000;
 export const DEFAULT_MAX_FILES = 20_000;
 
+/**
+ * Output-contract limits, owned here and enforced by the doctor/snapshot
+ * validators: a reported name can never exceed a plausible basename and a
+ * reported path can never exceed any real filesystem path length.
+ */
+export const MAX_NAME_LENGTH = 256;
+export const MAX_PATH_LENGTH = 4096;
+
 /** Directories that are never descended (cache, vcs, temp, ...). */
 export const SKIP_NAMES = new Set([
   ".git",
@@ -95,7 +103,11 @@ export function toolName(file: string, ex: Set<string> | null): string {
   const base = path.basename(file);
   if (!ex) return base;
   const ext = path.extname(base).toLowerCase();
-  return ex.has(ext) ? base.slice(0, -ext.length) : base;
+  if (!ex.has(ext)) return base;
+  const stripped = base.slice(0, -ext.length);
+  // A hostile launcher name ("..cmd", ".exe") must never yield a bare
+  // traversal name — the scanner is the producer of the output contract.
+  return stripped === "." || stripped === ".." ? base : stripped;
 }
 
 /** The install roots beyond PATH, per platform. Order is scan priority. */

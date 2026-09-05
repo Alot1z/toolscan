@@ -23,7 +23,11 @@ what it saw.
 It is **bounded and truthful by construction**: every scan is capped (max
 files, max depth, max ms) and a scan that hits the budget says
 `truncated: true` and exits 2 — a partial scan is never presented as a
-complete one. Nothing is installed, modified, or executed; it is a read-only
+complete one. The contract is **fail closed**: `check` and `missing` refuse
+to answer from a truncated scan (exit 2 with a reason) instead of emitting a
+silent "not found", and `scan` audits its own output against the documented
+JSON shape before emitting it. `toolscan doctor` verifies the whole surface
+on demand. Nothing is installed, modified, or executed; it is a read-only
 scanner.
 
 ## Install
@@ -50,6 +54,7 @@ anything.
 | `diff A [B]` | added / removed / changed (B = live scan) | 1 when anything changed |
 | `missing --from F` | validate a name list | 1 when any absent |
 | `drift --baseline B` | scan vs snapshot, rewrite baseline | 1 drifted / 2 truncated |
+| `doctor` | one-shot invariant oracle over a live scan: schema, absolute paths on disk, honest truncation | 0 green / 1 violation / 2 truncated |
 
 `diff --moves` detects renames by bounded content hash (only launchers ≤ 2 MB
 are hashed). See [docs/usage.md](docs/usage.md) for flags and exit-code

@@ -6,8 +6,8 @@ var __export = (target, all4) => {
 };
 
 // src/cli.ts
-import * as fs3 from "node:fs";
-import * as path2 from "node:path";
+import * as fs4 from "node:fs";
+import * as path3 from "node:path";
 
 // node_modules/effect/dist/esm/Function.js
 var isFunction = (input) => typeof input === "function";
@@ -5708,67 +5708,67 @@ var Or = (self, that) => {
   });
   return error;
 };
-var InvalidData = (path3, message, options = {
+var InvalidData = (path4, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_INVALID_DATA;
-  error.path = path3;
+  error.path = path4;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path4 = pipe(this.path, join(options.pathDelim));
-      return `(Invalid data at ${path4}: "${this.message}")`;
+      const path5 = pipe(this.path, join(options.pathDelim));
+      return `(Invalid data at ${path5}: "${this.message}")`;
     }
   });
   return error;
 };
-var MissingData = (path3, message, options = {
+var MissingData = (path4, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_MISSING_DATA;
-  error.path = path3;
+  error.path = path4;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path4 = pipe(this.path, join(options.pathDelim));
-      return `(Missing data at ${path4}: "${this.message}")`;
+      const path5 = pipe(this.path, join(options.pathDelim));
+      return `(Missing data at ${path5}: "${this.message}")`;
     }
   });
   return error;
 };
-var SourceUnavailable = (path3, message, cause3, options = {
+var SourceUnavailable = (path4, message, cause3, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_SOURCE_UNAVAILABLE;
-  error.path = path3;
+  error.path = path4;
   error.message = message;
   error.cause = cause3;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path4 = pipe(this.path, join(options.pathDelim));
-      return `(Source unavailable at ${path4}: "${this.message}")`;
+      const path5 = pipe(this.path, join(options.pathDelim));
+      return `(Source unavailable at ${path5}: "${this.message}")`;
     }
   });
   return error;
 };
-var Unsupported = (path3, message, options = {
+var Unsupported = (path4, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_UNSUPPORTED;
-  error.path = path3;
+  error.path = path4;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path4 = pipe(this.path, join(options.pathDelim));
-      return `(Unsupported operation at ${path4}: "${this.message}")`;
+      const path5 = pipe(this.path, join(options.pathDelim));
+      return `(Unsupported operation at ${path5}: "${this.message}")`;
     }
   });
   return error;
@@ -5874,9 +5874,9 @@ var reduceWithContext2 = /* @__PURE__ */ dual(3, (self, context4, reducer) => {
 var empty19 = {
   _tag: "Empty"
 };
-var patch5 = /* @__PURE__ */ dual(2, (path3, patch9) => {
+var patch5 = /* @__PURE__ */ dual(2, (path4, patch9) => {
   let input = of3(patch9);
-  let output = path3;
+  let output = path4;
   while (isCons(input)) {
     const patch10 = input.head;
     switch (patch10._tag) {
@@ -5944,7 +5944,7 @@ var make21 = (options) => ({
 var makeFlat = (options) => ({
   [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
   patch: options.patch,
-  load: (path3, config, split = true) => options.load(path3, config, split),
+  load: (path4, config, split = true) => options.load(path4, config, split),
   enumerateChildren: options.enumerateChildren
 });
 var fromFlat = (flat) => make21({
@@ -5962,29 +5962,29 @@ var fromEnv = (options) => {
     pathDelim: "_",
     seqDelim: ","
   }, options);
-  const makePathString = (path3) => pipe(path3, join(pathDelim));
+  const makePathString = (path4) => pipe(path4, join(pathDelim));
   const unmakePathString = (pathString) => pathString.split(pathDelim);
   const getEnv = () => typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {};
-  const load = (path3, primitive, split = true) => {
-    const pathString = makePathString(path3);
+  const load = (path4, primitive, split = true) => {
+    const pathString = makePathString(path4);
     const current = getEnv();
     const valueOpt = pathString in current ? some2(current[pathString]) : none2();
-    return pipe(valueOpt, mapError(() => MissingData(path3, `Expected ${pathString} to exist in the process context`)), flatMap7((value) => parsePrimitive(value, path3, primitive, seqDelim, split)));
+    return pipe(valueOpt, mapError(() => MissingData(path4, `Expected ${pathString} to exist in the process context`)), flatMap7((value) => parsePrimitive(value, path4, primitive, seqDelim, split)));
   };
-  const enumerateChildren = (path3) => sync(() => {
+  const enumerateChildren = (path4) => sync(() => {
     const current = getEnv();
     const keys5 = Object.keys(current);
     const keyPaths = keys5.map((value) => unmakePathString(value.toUpperCase()));
     const filteredKeyPaths = keyPaths.filter((keyPath) => {
-      for (let i = 0; i < path3.length; i++) {
-        const pathComponent = pipe(path3, unsafeGet(i));
+      for (let i = 0; i < path4.length; i++) {
+        const pathComponent = pipe(path4, unsafeGet(i));
         const currentElement = keyPath[i];
         if (currentElement === void 0 || pathComponent !== currentElement) {
           return false;
         }
       }
       return true;
-    }).flatMap((keyPath) => keyPath.slice(path3.length, path3.length + 1));
+    }).flatMap((keyPath) => keyPath.slice(path4.length, path4.length + 1));
     return fromIterable5(filteredKeyPaths);
   });
   return fromFlat(makeFlat({
@@ -6000,25 +6000,25 @@ var extend = (leftDef, rightDef, left3, right3) => {
   const rightExtension = concat(right3, rightPad);
   return [leftExtension, rightExtension];
 };
-var appendConfigPath = (path3, config) => {
+var appendConfigPath = (path4, config) => {
   let op = config;
   if (op._tag === "Nested") {
-    const out = path3.slice();
+    const out = path4.slice();
     while (op._tag === "Nested") {
       out.push(op.name);
       op = op.config;
     }
     return out;
   }
-  return path3;
+  return path4;
 };
 var RedactedConfigErrorReducer = {
   andCase: (_, left3, right3) => And(left3, right3),
   orCase: (_, left3, right3) => Or(left3, right3),
-  invalidDataCase: (_, path3) => InvalidData(path3, "<redacted>"),
-  missingDataCase: (_, path3) => MissingData(path3, "<redacted>"),
-  sourceUnavailableCase: (_, path3, _message, cause3) => SourceUnavailable(path3, "<redacted>", cause3),
-  unsupportedCase: (_, path3) => Unsupported(path3, "<redacted>")
+  invalidDataCase: (_, path4) => InvalidData(path4, "<redacted>"),
+  missingDataCase: (_, path4) => MissingData(path4, "<redacted>"),
+  sourceUnavailableCase: (_, path4, _message, cause3) => SourceUnavailable(path4, "<redacted>", cause3),
+  unsupportedCase: (_, path4) => Unsupported(path4, "<redacted>")
 };
 var redactConfigError = (error) => reduceWithContext2(error, void 0, RedactedConfigErrorReducer);
 var fromFlatLoop = (flat, prefix, config, split) => {
@@ -6098,8 +6098,8 @@ var fromFlatLoop = (flat, prefix, config, split) => {
           return fail2(right3.left);
         }
         if (isRight2(left3) && isRight2(right3)) {
-          const path3 = pipe(prefix, join("."));
-          const fail6 = fromFlatLoopFail(prefix, path3);
+          const path4 = pipe(prefix, join("."));
+          const fail6 = fromFlatLoopFail(prefix, path4);
           const [lefts, rights] = extend(fail6, fail6, pipe(left3.right, map2(right2)), pipe(right3.right, map2(right2)));
           return pipe(lefts, zip(rights), forEachSequential(([left4, right4]) => pipe(zip2(left4, right4), map8(([left5, right5]) => op.zip(left5, right5)))));
         }
@@ -6108,19 +6108,19 @@ var fromFlatLoop = (flat, prefix, config, split) => {
     }
   }
 };
-var fromFlatLoopFail = (prefix, path3) => (index) => left2(MissingData(prefix, `The element at index ${index} in a sequence at path "${path3}" was missing`));
+var fromFlatLoopFail = (prefix, path4) => (index) => left2(MissingData(prefix, `The element at index ${index} in a sequence at path "${path4}" was missing`));
 var splitPathString = (text, delim) => {
   const split = text.split(new RegExp(`\\s*${escape(delim)}\\s*`));
   return split;
 };
-var parsePrimitive = (text, path3, primitive, delimiter2, split) => {
+var parsePrimitive = (text, path4, primitive, delimiter2, split) => {
   if (!split) {
     return pipe(primitive.parse(text), mapBoth({
-      onFailure: prefixed(path3),
+      onFailure: prefixed(path4),
       onSuccess: of
     }));
   }
-  return pipe(splitPathString(text, delimiter2), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path3)));
+  return pipe(splitPathString(text, delimiter2), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path4)));
 };
 var transpose = (array3) => {
   return Object.keys(array3[0]).map((column) => array3.map((row) => row[column]));
@@ -15232,6 +15232,10 @@ var ensureSuccessType = () => (effect) => effect;
 var ensureErrorType = () => (effect) => effect;
 var ensureRequirementsType = () => (effect) => effect;
 
+// src/doctor.ts
+import * as fs2 from "node:fs";
+import * as path2 from "node:path";
+
 // src/scan.ts
 import { createHash } from "node:crypto";
 import * as fs from "node:fs";
@@ -15239,6 +15243,8 @@ import * as path from "node:path";
 var DEFAULT_DEPTH = 2;
 var DEFAULT_MAX_MS = 8e3;
 var DEFAULT_MAX_FILES = 2e4;
+var MAX_NAME_LENGTH = 256;
+var MAX_PATH_LENGTH = 4096;
 var SKIP_NAMES = /* @__PURE__ */ new Set([
   ".git",
   "node_modules",
@@ -15272,7 +15278,9 @@ function toolName(file, ex) {
   const base = path.basename(file);
   if (!ex) return base;
   const ext = path.extname(base).toLowerCase();
-  return ex.has(ext) ? base.slice(0, -ext.length) : base;
+  if (!ex.has(ext)) return base;
+  const stripped = base.slice(0, -ext.length);
+  return stripped === "." || stripped === ".." ? base : stripped;
 }
 function defaultRoots(platform, env) {
   const h = env.HOME || env.USERPROFILE || "";
@@ -15438,8 +15446,83 @@ function hashLauncher(file) {
   }
 }
 
+// src/doctor.ts
+function validateToolEntry(value) {
+  if (typeof value !== "object" || value === null) return ["tool entry is not an object"];
+  const t = value;
+  const problems = [];
+  if (typeof t.name !== "string" || t.name.length === 0) {
+    problems.push("name must be a non-empty string");
+  } else {
+    if (t.name.length > MAX_NAME_LENGTH) problems.push(`name exceeds ${MAX_NAME_LENGTH} chars`);
+    if (/[/\\]/.test(t.name)) problems.push("name must not contain path separators");
+    if (t.name === "." || t.name === "..") problems.push('name must not be "." or ".."');
+  }
+  if (typeof t.path !== "string" || t.path.length === 0) {
+    problems.push("path must be a non-empty string");
+  } else {
+    if (t.path.length > MAX_PATH_LENGTH) problems.push(`path exceeds ${MAX_PATH_LENGTH} chars`);
+    if (!path2.isAbsolute(t.path)) problems.push("path must be absolute");
+  }
+  if (t.source !== "PATH" && t.source !== "root") problems.push('source must be "PATH" or "root"');
+  return problems;
+}
+function validateScanReport(value) {
+  if (typeof value !== "object" || value === null) return ["report is not an object"];
+  const r = value;
+  const problems = [];
+  if (r.ok !== true) problems.push("ok must be true");
+  if (typeof r.elapsedMs !== "number" || !Number.isFinite(r.elapsedMs) || r.elapsedMs < 0) {
+    problems.push("elapsedMs must be a finite number >= 0");
+  }
+  if (typeof r.truncated !== "boolean") problems.push("truncated must be a boolean");
+  if (typeof r.pathEntries !== "number" || !Number.isInteger(r.pathEntries) || r.pathEntries < 0) {
+    problems.push("pathEntries must be a non-negative integer");
+  }
+  if (!Array.isArray(r.tools)) {
+    problems.push("tools must be an array");
+    return problems;
+  }
+  const seen = /* @__PURE__ */ new Set();
+  r.tools.forEach((t, i) => {
+    for (const p of validateToolEntry(t)) problems.push(`tools[${i}]: ${p}`);
+    const name = t.name;
+    if (typeof name === "string") {
+      if (seen.has(name)) problems.push(`tools[${i}]: duplicate name "${name}"`);
+      seen.add(name);
+    }
+  });
+  return problems;
+}
+function auditReport(report) {
+  const checks = [];
+  const schema = validateScanReport(report);
+  checks.push({
+    name: "schema",
+    ok: schema.length === 0,
+    detail: schema.join("; ") || "report matches the documented output contract"
+  });
+  const tools = schema.length === 0 ? report.tools : [];
+  const missing = tools.filter((t) => !fs2.existsSync(t.path)).map((t) => t.name);
+  checks.push({
+    name: "paths-exist",
+    ok: missing.length === 0,
+    detail: missing.length ? `missing on disk: ${missing.join(", ")}` : "every reported path exists"
+  });
+  const truncated = schema.length === 0 && report.truncated;
+  checks.push({
+    name: "complete-scan",
+    ok: !truncated,
+    detail: truncated ? "scan hit its budget \u2014 raise --max-files/--max-ms and re-run" : "scan completed within budget"
+  });
+  return { ok: checks.every((c) => c.ok), truncated, checks };
+}
+function doctor(opts = {}) {
+  return Effect_exports.map(scan(opts), auditReport);
+}
+
 // src/snapshot.ts
-import * as fs2 from "node:fs";
+import * as fs3 from "node:fs";
 function snapshotFrom(report, platform, date = (/* @__PURE__ */ new Date()).toISOString()) {
   return {
     format: "toolscan-snapshot/1",
@@ -15451,15 +15534,41 @@ function snapshotFrom(report, platform, date = (/* @__PURE__ */ new Date()).toIS
   };
 }
 function loadSnapshot(file) {
-  const raw = fs2.readFileSync(file, "utf8");
-  const parsed = JSON.parse(raw);
+  let raw;
+  try {
+    raw = fs3.readFileSync(file, "utf8");
+  } catch (err) {
+    throw new Error(`${file} cannot be read: ${err.message}`);
+  }
+  if (raw.trim().length === 0) {
+    throw new Error(`${file} is empty \u2014 not a toolscan snapshot`);
+  }
+  let parsed;
+  try {
+    parsed = JSON.parse(raw);
+  } catch (err) {
+    throw new Error(`${file} is not valid JSON: ${err.message}`);
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error(`${file} is not a toolscan snapshot (root is not an object)`);
+  }
   if (!Array.isArray(parsed.tools)) {
     throw new Error(`${file} is not a toolscan snapshot (missing tools array)`);
+  }
+  parsed.tools.forEach((t, i) => {
+    for (const problem of validateToolEntry(t)) {
+      throw new Error(`${file} violates the snapshot contract at tools[${i}]: ${problem}`);
+    }
+  });
+  const names = parsed.tools.map((t) => t.name);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length > 0) {
+    throw new Error(`${file} violates the snapshot contract: duplicate tool name(s) ${[...new Set(dupes)].join(", ")}`);
   }
   return parsed;
 }
 function writeSnapshot(file, snapshot) {
-  fs2.writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
+  fs3.writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
 `, "utf8");
 }
 function diffTools(a, b, options = {}) {
@@ -15468,11 +15577,11 @@ function diffTools(a, b, options = {}) {
   const added = [];
   const removed = [];
   const changed = [];
-  for (const [name, path3] of bm) {
-    if (!am.has(name)) added.push({ name, path: path3 });
+  for (const [name, path4] of bm) {
+    if (!am.has(name)) added.push({ name, path: path4 });
   }
-  for (const [name, path3] of am) {
-    if (!bm.has(name)) removed.push({ name, path: path3 });
+  for (const [name, path4] of am) {
+    if (!bm.has(name)) removed.push({ name, path: path4 });
   }
   for (const [name, to] of bm) {
     const from = am.get(name);
@@ -15522,6 +15631,8 @@ Commands:
                                  which are not found; exit 1 when any are missing
   toolscan drift --baseline B    scan, compare to a saved snapshot, rewrite the
                                  baseline; exit 1 when the machine drifted (2 = truncated)
+  toolscan doctor                one-shot invariant oracle over a live scan (exit 1
+                                 when any check fails; 2 when the scan truncated)
 
 Flags: --name GLOB --roots A,B --no-path --no-roots --depth N --max-ms N
        --max-files N --format json|text --moves (diff: detect renames by
@@ -15537,7 +15648,7 @@ function parseArgs(argv) {
     console.log(`toolscan ${VERSION}`);
     process.exit(0);
   }
-  const commands = /* @__PURE__ */ new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift"]);
+  const commands = /* @__PURE__ */ new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift", "doctor"]);
   let command = "scan";
   const positional = [];
   for (const a of argv) {
@@ -15571,6 +15682,14 @@ function parseArgs(argv) {
   };
 }
 var runScan = (options) => scan(options);
+function refuseTruncated(truncated, command) {
+  if (!truncated) return;
+  process.stderr.write(
+    `toolscan ${command}: scan was truncated (budget exceeded) \u2014 the result is partial and cannot answer this question. Raise --max-files/--max-ms and re-run.
+`
+  );
+  process.exit(2);
+}
 function fail5(message, code) {
   process.stderr.write(`${message}
 `);
@@ -15596,6 +15715,7 @@ async function main(argv = process.argv.slice(2)) {
         process.exit(2);
       }
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
+      refuseTruncated(report.truncated, "check");
       const found = report.tools.find((t) => t.name.toLowerCase() === name.toLowerCase());
       if (found) {
         console.log(found.path);
@@ -15608,7 +15728,7 @@ async function main(argv = process.argv.slice(2)) {
     }
     case "snapshot": {
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
-      const file = args2.out || path2.join(process.cwd(), "toolscan-snapshot.json");
+      const file = args2.out || path3.join(process.cwd(), "toolscan-snapshot.json");
       writeSnapshot(file, snapshotFrom(report, process.platform));
       if (!args2.quiet) console.log(file);
       process.exit(report.truncated ? 2 : 0);
@@ -15636,8 +15756,9 @@ async function main(argv = process.argv.slice(2)) {
         usage();
         process.exit(2);
       }
-      const names = fs3.readFileSync(args2.from, "utf8").split(/[\s,]+/).filter(Boolean);
+      const names = fs4.readFileSync(args2.from, "utf8").split(/[\s,]+/).filter(Boolean);
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
+      refuseTruncated(report.truncated, "missing");
       const have = new Set(report.tools.map((t) => t.name.toLowerCase()));
       const missing = names.filter((n) => !have.has(n.toLowerCase()));
       const out = { ok: missing.length === 0, missing };
@@ -15668,6 +15789,12 @@ async function main(argv = process.argv.slice(2)) {
       process.exit(out.ok ? 0 : 1);
       break;
     }
+    case "doctor": {
+      const report = await Effect_exports.runPromise(doctor(args2.scanOptions));
+      console.log(JSON.stringify(report, null, 2));
+      process.exit(report.ok ? 0 : report.truncated ? 2 : 1);
+      break;
+    }
     case "scan":
     default: {
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
@@ -15683,6 +15810,10 @@ async function main(argv = process.argv.slice(2)) {
           pathEntries: report.pathEntries,
           tools: report.tools
         };
+        const violations = validateScanReport(out);
+        if (violations.length > 0) {
+          fail5(`toolscan scan: internal contract violation: ${violations.join("; ")}`, 1);
+        }
         console.log(JSON.stringify(out, null, 2));
       }
       process.exit(report.truncated ? 2 : 0);

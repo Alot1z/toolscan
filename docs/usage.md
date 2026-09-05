@@ -10,6 +10,8 @@ toolscan diff A.json [B.json]  added/removed/changed (B defaults to a live scan)
 toolscan missing --from F      report names (newline/comma list) not found; exit 1
 toolscan drift --baseline B [--out O]  scan, compare against a saved snapshot,
                                rewrite the baseline, exit 1 when drifted (2 = truncated)
+toolscan doctor               one-shot invariant oracle over a live scan:
+                               output schema, existing absolute paths, honest truncation
 ```
 
 ## Flags
@@ -33,9 +35,12 @@ toolscan drift --baseline B [--out O]  scan, compare against a saved snapshot,
 ## Exit codes
 
 - `0` — success; nothing changed / nothing missing / not truncated
-- `1` — a real difference: tool missing, drift detected, `check` miss
+- `1` — a real difference: tool missing, drift detected, `check` miss,
+  `doctor` found a contract violation
 - `2` — the scan was **truncated** (budget exceeded): the answer is partial.
-  `drift` refuses to write a truncated scan as the new baseline.
+  `drift` refuses to write a truncated scan as the new baseline; `check` and
+  `missing` refuse to answer at all — a partial scan never produces a silent
+  "not found" (fail closed); `doctor` reports the truncation as exit 2.
 
 ## Examples
 

@@ -13,6 +13,8 @@
  *   toolscan missing --from F      report names (newline/comma list) not found; exit 1
  *   toolscan drift --baseline B [--out O]  scan, compare against a saved snapshot,
  *                                  rewrite the baseline, exit 1 when drifted (2 = truncated)
+ *   toolscan doctor               one-shot invariant oracle over a live scan:
+ *                                  schema, existing absolute paths, honest truncation
  *
  * Shared flags: --name GLOB --roots A,B --no-path --no-roots --depth N
  *               --max-ms N --max-files N --quiet --format json|text --moves --version
@@ -22,13 +24,16 @@ import * as path from "node:path";
 
 import { Effect } from "effect";
 
+// Aliased: a local `function doctor` in this module would otherwise shadow
+// the import inside the switch (hoisting), and the command would explode.
+import { doctor as runDoctor, validateScanReport } from "./doctor.js";
 import { scan, type ScanOptions } from "./scan.js";
 import { diffTools, loadSnapshot, snapshotFrom, writeSnapshot } from "./snapshot.js";
 
 const VERSION = "2.0.0";
 
 interface ParsedArgs {
-  command: "scan" | "list" | "check" | "snapshot" | "diff" | "missing" | "drift";
+  command: "scan" | "list" | "check" | "snapshot" | "diff" | "missing" | "drift" | "doctor";
   positional: string[];
   scanOptions: ScanOptions;
   quiet: boolean;
@@ -53,6 +58,8 @@ Commands:
                                  which are not found; exit 1 when any are missing
   toolscan drift --baseline B    scan, compare to a saved snapshot, rewrite the
                                  baseline; exit 1 when the machine drifted (2 = truncated)
+  toolscan doctor                one-shot invariant oracle over a live scan (exit 1
+                                 when any check fails; 2 when the scan truncated)
 
 Flags: --name GLOB --roots A,B --no-path --no-roots --depth N --max-ms N
        --max-files N --format json|text --moves (diff: detect renames by
@@ -70,7 +77,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
     process.exit(0);
   }
 
-  const commands = new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift"]);
+  const commands = new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift", "doctor"]);
   let command: ParsedArgs["command"] = "scan";
   const positional: string[] = [];
   for (const a of argv) {
@@ -109,6 +116,19 @@ function parseArgs(argv: string[]): ParsedArgs | null {
 
 const runScan = (options: ScanOptions): Effect.Effect<import("./scan.js").ScanReport, never, never> => scan(options);
 
+/**
+ * Fail closed: a truncated scan is PARTIAL, so any negative it produces
+ * ("not found", "missing") would be a silent lie. Refuse to answer from
+ * partial data — the reason goes to stderr, the exit code is 2.
+ */
+function refuseTruncated(truncated: boolean, command: string): void {
+  if (!truncated) return;
+  process.stderr.write(
+    `toolscan ${command}: scan was truncated (budget exceeded) — the result is partial and cannot answer this question. Raise --max-files/--max-ms and re-run.\n`,
+  );
+  process.exit(2);
+}
+
 function fail(message: string, code: number): never {
   process.stderr.write(`${message}\n`);
   process.exit(code);
@@ -136,6 +156,7 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
         process.exit(2);
       }
       const report = await Effect.runPromise(runScan(args.scanOptions));
+      refuseTruncated(report.truncated, "check");
       const found = report.tools.find((t) => t.name.toLowerCase() === name.toLowerCase());
       if (found) {
         console.log(found.path);
@@ -180,6 +201,7 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
         .split(/[\s,]+/)
         .filter(Boolean);
       const report = await Effect.runPromise(runScan(args.scanOptions));
+      refuseTruncated(report.truncated, "missing");
       const have = new Set(report.tools.map((t) => t.name.toLowerCase()));
       const missing = names.filter((n) => !have.has(n.toLowerCase()));
       const out = { ok: missing.length === 0, missing };
@@ -213,6 +235,12 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
       process.exit(out.ok ? 0 : 1);
       break;
     }
+    case "doctor": {
+      const report = await Effect.runPromise(runDoctor(args.scanOptions));
+      console.log(JSON.stringify(report, null, 2));
+      process.exit(report.ok ? 0 : report.truncated ? 2 : 1);
+      break;
+    }
     case "scan":
     default: {
       const report = await Effect.runPromise(runScan(args.scanOptions));
@@ -228,6 +256,13 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
           pathEntries: report.pathEntries,
           tools: report.tools,
         };
+        // Fail closed before emission: the JSON contract is load-bearing
+        // for downstream consumers. A malformed report is an error with the
+        // reason — never a silent malformed payload.
+        const violations = validateScanReport(out);
+        if (violations.length > 0) {
+          fail(`toolscan scan: internal contract violation: ${violations.join("; ")}`, 1);
+        }
         console.log(JSON.stringify(out, null, 2));
       }
       process.exit(report.truncated ? 2 : 0);

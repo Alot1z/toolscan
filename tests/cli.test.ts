@@ -149,6 +149,54 @@ describe("toolscan CLI", () => {
     expect(cli(["drift", "--baseline", base, "--no-roots"]).status).toBe(0);
   });
 
+  it("fail-closed: truncated check/missing exit 2 with a reason, never a silent negative", () => {
+    for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
+
+    // Without truncation, check misses cleanly with exit 1.
+    const cleanMiss = cli(["check", "absent", "--no-roots", "--max-files", "100"]);
+    expect(cleanMiss.status).toBe(1);
+    expect(cleanMiss.stdout.trim()).toBe("");
+
+    // With a forced budget, the same miss must REFUSE to answer: exit 2,
+    // reason on stderr, stdout empty (a parser sees nothing to trust).
+    const truncatedMiss = cli(["check", "t0", "--no-roots", "--max-files", "2"]);
+    expect(truncatedMiss.status).toBe(2);
+    expect(truncatedMiss.stderr).toMatch(/truncated/);
+    expect(truncatedMiss.stdout.trim()).toBe("");
+
+    const nameList = join(root, "tools.txt");
+    writeFileSync(nameList, "t0\nabsent\n");
+    const truncatedMissing = cli(["missing", "--from", nameList, "--no-roots", "--max-files", "2"]);
+    expect(truncatedMissing.status).toBe(2);
+    expect(truncatedMissing.stderr).toMatch(/truncated/);
+  });
+
+  it("fail-closed: scan output must conform to the documented schema before emission", () => {
+    writeFileSync(join(binA, "tool1.cmd"), "x");
+    const r = cli(["scan", "--no-roots"]);
+    expect(r.status).toBe(0);
+    const out = JSON.parse(r.stdout);
+    // The audit gate ran inside the CLI: shape is exactly the documented one.
+    expect(Object.keys(out).sort()).toEqual(["elapsedMs", "ok", "pathEntries", "tools", "truncated"]);
+    expect(out.tools[0]).toEqual({ name: "tool1", path: join(binA, "tool1.cmd"), source: "PATH" });
+  });
+
+  it("doctor is ALL GREEN on a healthy machine surface and reports truncation as exit 2", () => {
+    writeFileSync(join(binA, "tool1.cmd"), "x");
+
+    const ok = cli(["doctor", "--no-roots"]);
+    expect(ok.status).toBe(0);
+    const report = JSON.parse(ok.stdout);
+    expect(report.ok).toBe(true);
+    expect(report.checks.map((c: { name: string }) => c.name)).toEqual(["schema", "paths-exist", "complete-scan"]);
+
+    // Enough files to actually exhaust a --max-files 2 budget.
+    for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
+    const truncated = cli(["doctor", "--no-roots", "--max-files", "2"]);
+    expect(truncated.status).toBe(2);
+    expect(JSON.parse(truncated.stdout).truncated).toBe(true);
+  });
+
   it("drift refuses to overwrite the baseline from a truncated scan (exit 2)", () => {
     for (let i = 0; i < 5; i++) writeFileSync(join(binA, `t${i}.cmd`), "x");
     const base = join(root, "base.json");

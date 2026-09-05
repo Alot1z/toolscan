@@ -42,6 +42,102 @@ describe("snapshot", () => {
   });
 });
 
+describe("loadSnapshot — hostile input sweep (B4)", () => {
+  const write = (name: string, content: string): string => {
+    const file = join(root, name);
+    writeFileSync(file, content);
+    return file;
+  };
+
+  it("rejects an empty file (fail closed, never silent)", () => {
+    const file = write("empty.json", "   ");
+    expect(() => loadSnapshot(file)).toThrow(/is empty/);
+  });
+
+  it("rejects invalid JSON with the parse reason", () => {
+    const file = write("broken.json", '{"tools": [');
+    expect(() => loadSnapshot(file)).toThrow(/not valid JSON/);
+  });
+
+  it("rejects a non-object root", () => {
+    const file = write("array.json", "[1,2,3]");
+    expect(() => loadSnapshot(file)).toThrow(/not a toolscan snapshot/);
+  });
+
+  it("rejects an unreadable file", () => {
+    expect(() => loadSnapshot(join(root, "does-not-exist.json"))).toThrow(/cannot be read/);
+  });
+
+  it("rejects path traversal in a reported path", () => {
+    const file = write(
+      "traversal.json",
+      JSON.stringify({
+        format: "toolscan-snapshot/1",
+        tools: [{ name: "evil", path: "../../somewhere/tool", source: "root" }],
+      }),
+    );
+    expect(() => loadSnapshot(file)).toThrow(/tools\[0\].*path must be absolute/s);
+  });
+
+  it("rejects duplicate tool names", () => {
+    const file = write(
+      "dupes.json",
+      JSON.stringify({
+        format: "toolscan-snapshot/1",
+        tools: [
+          { name: "toolx", path: join(root, "a.cmd"), source: "PATH" },
+          { name: "toolx", path: join(root, "b.cmd"), source: "root" },
+        ],
+      }),
+    );
+    expect(() => loadSnapshot(file)).toThrow(/duplicate tool name\(s\) toolx/);
+  });
+
+  it("rejects separators smuggled into a name", () => {
+    const file = write(
+      "sep.json",
+      JSON.stringify({
+        format: "toolscan-snapshot/1",
+        tools: [{ name: "a/b", path: join(root, "a.cmd"), source: "PATH" }],
+      }),
+    );
+    expect(() => loadSnapshot(file)).toThrow(/path separators/);
+  });
+
+  it("rejects absurd field sizes", () => {
+    const file = write(
+      "huge.json",
+      JSON.stringify({
+        format: "toolscan-snapshot/1",
+        tools: [{ name: "x".repeat(300), path: join(root, "a.cmd"), source: "PATH" }],
+      }),
+    );
+    expect(() => loadSnapshot(file)).toThrow(/exceeds 256/);
+  });
+
+  it("rejects a non-object tool entry with the offending index", () => {
+    const file = write(
+      "garbage-entry.json",
+      JSON.stringify({ format: "toolscan-snapshot/1", tools: ["toolx"] }),
+    );
+    expect(() => loadSnapshot(file)).toThrow(/tools\[0\].*not an object/s);
+  });
+
+  it("still accepts a valid snapshot written by an older writer (back-compat)", () => {
+    const file = write(
+      "valid.json",
+      JSON.stringify({
+        format: "toolscan-snapshot/1",
+        date: "2026-09-03T00:00:00.000Z",
+        platform: "win32",
+        tools: [{ name: "tool1", path: join(root, "tool1.cmd"), source: "PATH" }],
+      }),
+    );
+    const loaded = loadSnapshot(file);
+    expect(loaded.tools[0].name).toBe("tool1");
+  });
+});
+
 describe("diffTools", () => {
   it("reports added, removed and changed", () => {
     const before = [tool("a", "a.cmd"), tool("b", "b.cmd"), tool("c", "c1.cmd")];

@@ -9,6 +9,7 @@
  */
 import * as fs from "node:fs";
 
+import { validateToolEntry } from "./doctor.js";
 import type { ScanReport, ToolEntry } from "./scan.js";
 import { hashLauncher } from "./scan.js";
 
@@ -45,11 +46,44 @@ export function snapshotFrom(report: ScanReport, platform: string, date = new Da
   };
 }
 
+/**
+ * Fail closed on any snapshot that violates the output contract. A snapshot
+ * is untrusted input: it may be hand-edited, corrupted, truncated by a full
+ * disk, or outright hostile (path traversal in a reported path, duplicate
+ * names, separators smuggled into names). Every violation is an error with
+ * the reason — never a silently trusted payload.
+ */
 export function loadSnapshot(file: string): Snapshot {
-  const raw = fs.readFileSync(file, "utf8");
-  const parsed = JSON.parse(raw) as Partial<Snapshot>;
+  let raw: string;
+  try {
+    raw = fs.readFileSync(file, "utf8");
+  } catch (err) {
+    throw new Error(`${file} cannot be read: ${(err as Error).message}`);
+  }
+  if (raw.trim().length === 0) {
+    throw new Error(`${file} is empty — not a toolscan snapshot`);
+  }
+  let parsed: Partial<Snapshot>;
+  try {
+    parsed = JSON.parse(raw) as Partial<Snapshot>;
+  } catch (err) {
+    throw new Error(`${file} is not valid JSON: ${(err as Error).message}`);
+  }
+  if (typeof parsed !== "object" || parsed === null) {
+    throw new Error(`${file} is not a toolscan snapshot (root is not an object)`);
+  }
   if (!Array.isArray(parsed.tools)) {
     throw new Error(`${file} is not a toolscan snapshot (missing tools array)`);
+  }
+  parsed.tools.forEach((t, i) => {
+    for (const problem of validateToolEntry(t)) {
+      throw new Error(`${file} violates the snapshot contract at tools[${i}]: ${problem}`);
+    }
+  });
+  const names = parsed.tools.map((t) => (t as ToolEntry).name);
+  const dupes = names.filter((n, i) => names.indexOf(n) !== i);
+  if (dupes.length > 0) {
+    throw new Error(`${file} violates the snapshot contract: duplicate tool name(s) ${[...new Set(dupes)].join(", ")}`);
   }
   return parsed as Snapshot;
 }
