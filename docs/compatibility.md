@@ -3,9 +3,6 @@
 ## The load-bearing contract (v1, unchanged in v2)
 
 The bare scan is the shape external consumers parse. **It must not change.**
-Current consumers: Ix (`ix mcp install` via `ix-cli/src/mcp/discovery.ts`, and
-`install-skill.sh` via `ix-cli/scripts/skill-harnesses.mjs --probe`), both
-driven by `TOOLSCAN_PATH` or `toolscan` on PATH.
 
 ```json
 {
@@ -27,9 +24,20 @@ Contract rules:
   result as partial, never as the complete machine.
 - `check <name>` prints the resolved path and exits 0/1; `missing --from`
   emits `{ ok, missing }` and exits 1 when anything is absent.
-- Ix's seam treats toolscan as **purely additive**: a name found means
-  "present"; a name absent means "run the embedded probe" (config dirs, PATH).
-  That contract lives in Ix; this repo just has to keep the shape stable.
+
+## How consumers integrate
+
+The seam is `TOOLSCAN_PATH=/path/to/dist/toolscan.mjs` (or `toolscan` on
+PATH): a consumer spawns the committed bundle and parses the JSON above.
+The seam is **purely additive** — a missing or failing toolscan never breaks
+the consumer; a name found means "present", a name absent means "run the
+embedded fallback probe". Integration semantics live in each consumer; this
+repo's job is to keep the shape stable.
+
+Known production consumers today: an installer and harness-detection step
+that probes which agent CLIs are present before deploying skills to them
+(`ix mcp install` / `install-skill.sh` in the Ix project; the `TOOLSCAN_PATH`
+contract is also exercised by a merged harness-discovery parser).
 
 ## Version history
 
@@ -38,6 +46,7 @@ Contract rules:
 | 1.0.0 | initial scanner (zero-dep `.mjs`) | contract defined |
 | 1.1.0 | `snapshot`, `diff`, `check`, `missing` | additive — scan shape unchanged |
 | 2.0.0 | TypeScript + Effect core, repo restructure (`src/ tests/ docs/ resources/ agents.md`), committed `dist/` bundle; new: `drift`, `--moves`, `--no-roots`, `--format text` | scan shape unchanged; `diff` gains a `moved` array (additive); snapshot format stays `toolscan-snapshot/1` |
+| 2.1.0 | brand pass: `assets/` generated logo (`scripts/render-logo.mjs`), README/CONTRIBUTING rewrite | none — docs, metadata, and assets only |
 
 ## Consumers must know
 

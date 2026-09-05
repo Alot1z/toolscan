@@ -1,7 +1,7 @@
 {
   "name": "toolscan",
-  "version": "2.0.0",
-  "description": "Cross-platform tool discovery: PATH + XDG + common install roots. Bounded, truthful, JSON out. TypeScript + Effect core, zero-dependency runtime bundle.",
+  "version": "2.1.0",
+  "description": "Cross-platform tool discovery beyond PATH: XDG + common install roots, bounded and truthful with fail-closed JSON output. For agent harnesses, skill installers, MCP servers, and CI drift checks.",
   "type": "module",
   "bin": {
     "toolscan": "dist/toolscan.mjs"
@@ -25,7 +25,13 @@
     "path",
     "xdg",
     "cli",
-    "tooling"
+    "tooling",
+    "ai",
+    "agents",
+    "mcp",
+    "devops",
+    "ci",
+    "cross-platform"
   ],
   "license": "MIT",
   "devDependencies": {

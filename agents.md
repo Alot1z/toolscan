@@ -14,10 +14,9 @@ never build and never install.
    Errors degrade to empty/absent, never to fabricated results.
 3. **The JSON contract is load-bearing**: `scan` output is
    `{ ok, elapsedMs, truncated, pathEntries, tools: [{name, path, source}] }`
-   with `source: "PATH" | "root"` and first-hit-wins ordering. Ix
-   (`ix mcp install`, `install-skill.sh`) consumes exactly this shape via
-   `TOOLSCAN_PATH` — see `docs/compatibility.md`. Any output-shape change is a
-   breaking change for the seam and must be versioned.
+   with `source: "PATH" | "root"` and first-hit-wins ordering. External
+   programs parse exactly this shape (documented in `docs/compatibility.md`) —
+   any output-shape change is breaking and must be versioned.
 4. **Zero-dep at runtime**: the committed `dist/toolscan.mjs` bundle is the
    artifact. TypeScript + Effect are build-time only.
 
@@ -26,10 +25,10 @@ never build and never install.
 ```
 src/            TypeScript + Effect core (scan pipeline, snapshot/diff, CLI)
 tests/          vitest, hermetic (injected env/fixture dirs — no real PATH)
-docs/           usage, architecture, compatibility (the Ix contract)
+docs/           usage, architecture, compatibility (the JSON contract)
 resources/      example snapshots and fixtures
-scripts/        build.mjs (esbuild bundle with shebang)
-dist/           COMMITTED zero-dep bundle (rebuild on change, keep in sync)
+scripts/        build.mjs (esbuild bundle), render-logo.mjs (brand geometry)
+assets/         generated logo assets (SVG + PNG) — never edit by hand
 agents.md       this file
 ```
 
@@ -41,10 +40,12 @@ npm run typecheck  # tsc --noEmit
 npm test           # build + vitest (pretest builds, so dist is always fresh)
 ```
 
-Commit conventions: conventional commits, author `Alot1z`, no AI/attribution
-footers (the repo's `commit-msg` guard strips them). Rebuild `dist/` in the
-same commit as any `src/` change — the committed bundle is the shipped
-artifact.
+Commit conventions: conventional commits, no AI/attribution footers (the
+repo's `commit-msg` guard strips them). Rebuild `dist/` in the same commit as
+any `src/` change — the committed bundle is the shipped artifact and CI
+byte-compares it against a fresh build. Brand changes: edit
+`scripts/render-logo.mjs`, re-run it, commit script + regenerated assets
+together.
 
 ## Testing discipline
 
