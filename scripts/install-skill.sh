@@ -160,13 +160,13 @@ fi
 
 # --- Report -------------------------------------------------------------------
 if [ "$JSON" = "1" ]; then
-  printf '%s\n' "${DECISIONS[@]:-}" | IX_DRY_RUN="$DRY_RUN" node -e '
+  printf '%s\n' "${DECISIONS[@]:-}" | TOOLSCAN_DRY_RUN="$DRY_RUN" node -e '
     const lines = require("node:fs").readFileSync(0, "utf8").split("\n").filter(Boolean);
     const hosts = lines.map((line) => {
       const [id, action, dest, via] = line.split("\t");
       return { id, action, dest: dest || null, detectedVia: via };
     });
-    process.stdout.write(JSON.stringify({ dryRun: process.env.IX_DRY_RUN === "1", hosts }, null, 2) + "\n");
+    process.stdout.write(JSON.stringify({ dryRun: process.env.TOOLSCAN_DRY_RUN === "1", hosts }, null, 2) + "\n");
   '
   [ "$conflicts" = "0" ] || exit 1
   exit 0
