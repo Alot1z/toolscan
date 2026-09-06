@@ -34,6 +34,15 @@
     "cross-platform"
   ],
   "license": "MIT",
+  "author": "Alot1z",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Alot1z/toolscan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Alot1z/toolscan/issues"
+  },
+  "homepage": "https://github.com/Alot1z/toolscan#readme",
   "devDependencies": {
     "@types/node": "^22.0.0",
     "effect": "^3.15.0",
