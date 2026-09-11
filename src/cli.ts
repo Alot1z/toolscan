@@ -31,6 +31,7 @@ import { Effect } from "effect";
 // the import inside the switch (hoisting), and the command would explode.
 import { doctor as runDoctor, validateScanReport } from "./doctor.js";
 import { scan, type ScanOptions } from "./scan.js";
+import { shadowedNames } from "./shadowed.js";
 import { diffTools, loadSnapshot, snapshotFrom, writeSnapshot } from "./snapshot.js";
 import { verifyEntries } from "./verify.js";
 
@@ -47,6 +48,7 @@ interface ParsedArgs {
   entries: string | undefined;
   format: "json" | "text";
   moves: boolean;
+  shadowed: boolean;
 }
 
 function usage(): void {
@@ -65,6 +67,10 @@ Commands:
                                  baseline; exit 1 when the machine drifted (2 = truncated)
   toolscan doctor                one-shot invariant oracle over a live scan (exit 1
                                  when any check fails; 2 when the scan truncated)
+  toolscan scan --shadowed       report names present in several PATH scopes with
+                                 DIFFERENT targets (shadowed names; exit 1 when any
+                                 found, 2 when the scan truncated) — case-insensitive
+                                 on win32, scope-classified via the provider seam
 
 Flags: --name GLOB --roots A,B --no-path --no-roots --depth N --max-ms N
        --max-files N --format json|text --moves (diff: detect renames by
@@ -117,6 +123,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
     entries: value("--entries"),
     format: value("--format") === "text" ? "text" : "json",
     moves: argv.includes("--moves"),
+    shadowed: argv.includes("--shadowed"),
   };
 }
 
@@ -266,6 +273,15 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
     case "scan":
     default: {
       const report = await Effect.runPromise(runScan(args.scanOptions));
+      if (args.shadowed) {
+        // Fail closed on truncation for the same reason as check/missing:
+        // a partial scan cannot honestly claim a name is NOT shadowed.
+        refuseTruncated(report.truncated, "scan --shadowed");
+        const out = shadowedNames(report, process.platform, process.env as Record<string, string>);
+        console.log(JSON.stringify(out, null, 2));
+        process.exit(out.ok ? 0 : 1);
+        break;
+      }
       if (args.quiet) {
         for (const t of report.tools) console.log(t.name);
       } else if (args.format === "text") {
