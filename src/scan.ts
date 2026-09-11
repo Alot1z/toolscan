@@ -139,6 +139,15 @@ export function defaultRoots(platform: NodeJS.Platform, env: NodeJS.ProcessEnv):
     if (env.APPDATA) p.push(path.join(env.APPDATA, "npm"));
     if (env.ProgramFiles) p.push(env.ProgramFiles);
     if (env["ProgramFiles(x86)"]) p.push(env["ProgramFiles(x86)"]);
+    // user-scope global installs that PATH often misses (W3, ECOv5 T5-B)
+    if (h) {
+      p.push(
+        path.join(h, ".cargo", "bin"),
+        path.join(h, "go", "bin"),
+        path.join(env.APPDATA || path.join(h, "AppData", "Roaming"), "Python", "Scripts"),
+        path.join(env.LOCALAPPDATA || path.join(h, "AppData", "Local"), "pip", "Scripts"),
+      );
+    }
   } else {
     for (const d of (env.XDG_DATA_DIRS || "/usr/local/share:/usr/share").split(":")) {
       if (d) p.push(path.join(d, "bin"));

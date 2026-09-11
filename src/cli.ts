@@ -15,6 +15,9 @@
  *                                  rewrite the baseline, exit 1 when drifted (2 = truncated)
  *   toolscan doctor               one-shot invariant oracle over a live scan:
  *                                  schema, existing absolute paths, honest truncation
+ *   toolscan verify --entries F   validate PATH entries (one per line): expand OS
+ *                                 tokens, classify machine/user scope, probe
+ *                                 existence; exit 1 when any entry fails
  *
  * Shared flags: --name GLOB --roots A,B --no-path --no-roots --depth N
  *               --max-ms N --max-files N --quiet --format json|text --moves --version
@@ -29,17 +32,19 @@ import { Effect } from "effect";
 import { doctor as runDoctor, validateScanReport } from "./doctor.js";
 import { scan, type ScanOptions } from "./scan.js";
 import { diffTools, loadSnapshot, snapshotFrom, writeSnapshot } from "./snapshot.js";
+import { verifyEntries } from "./verify.js";
 
 const VERSION = "2.0.0";
 
 interface ParsedArgs {
-  command: "scan" | "list" | "check" | "snapshot" | "diff" | "missing" | "drift" | "doctor";
+  command: "scan" | "list" | "check" | "snapshot" | "diff" | "missing" | "drift" | "doctor" | "verify";
   positional: string[];
   scanOptions: ScanOptions;
   quiet: boolean;
   out: string | undefined;
   from: string | undefined;
   baseline: string | undefined;
+  entries: string | undefined;
   format: "json" | "text";
   moves: boolean;
 }
@@ -63,7 +68,7 @@ Commands:
 
 Flags: --name GLOB --roots A,B --no-path --no-roots --depth N --max-ms N
        --max-files N --format json|text --moves (diff: detect renames by
-       content hash) --quiet --version
+       content hash) --entries F (verify: PATH entries file) --quiet --version
 `);
 }
 
@@ -77,7 +82,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
     process.exit(0);
   }
 
-  const commands = new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift", "doctor"]);
+  const commands = new Set(["scan", "list", "check", "snapshot", "diff", "missing", "drift", "doctor", "verify"] as ParsedArgs["command"][]);
   let command: ParsedArgs["command"] = "scan";
   const positional: string[] = [];
   for (const a of argv) {
@@ -109,6 +114,7 @@ function parseArgs(argv: string[]): ParsedArgs | null {
     out: value("--out"),
     from: value("--from"),
     baseline: value("--baseline"),
+    entries: value("--entries"),
     format: value("--format") === "text" ? "text" : "json",
     moves: argv.includes("--moves"),
   };
@@ -233,6 +239,22 @@ async function main(argv = process.argv.slice(2)): Promise<void> {
       writeSnapshot(args.out || args.baseline, next);
       console.log(JSON.stringify(out, null, 2));
       process.exit(out.ok ? 0 : 1);
+      break;
+    }
+    case "verify": {
+      if (!args.entries) {
+        usage();
+        process.exit(2);
+      }
+      let text: string;
+      try {
+        text = fs.readFileSync(args.entries, "utf8");
+      } catch (err) {
+        fail(`verify: cannot read entries file ${args.entries}: ${(err as Error).message}`, 1);
+      }
+      const report = verifyEntries(text, process.platform, process.env as Record<string, string>);
+      console.log(JSON.stringify(report, null, 2));
+      process.exit(report.ok ? 0 : 1);
       break;
     }
     case "doctor": {
