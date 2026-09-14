@@ -6,8 +6,8 @@ var __export = (target, all4) => {
 };
 
 // src/cli.ts
-import * as fs5 from "node:fs";
-import * as path5 from "node:path";
+import * as fs6 from "node:fs";
+import * as path6 from "node:path";
 
 // node_modules/effect/dist/esm/Function.js
 var isFunction = (input) => typeof input === "function";
@@ -5708,67 +5708,67 @@ var Or = (self, that) => {
   });
   return error;
 };
-var InvalidData = (path6, message, options = {
+var InvalidData = (path7, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_INVALID_DATA;
-  error.path = path6;
+  error.path = path7;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path7 = pipe(this.path, join(options.pathDelim));
-      return `(Invalid data at ${path7}: "${this.message}")`;
+      const path8 = pipe(this.path, join(options.pathDelim));
+      return `(Invalid data at ${path8}: "${this.message}")`;
     }
   });
   return error;
 };
-var MissingData = (path6, message, options = {
+var MissingData = (path7, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_MISSING_DATA;
-  error.path = path6;
+  error.path = path7;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path7 = pipe(this.path, join(options.pathDelim));
-      return `(Missing data at ${path7}: "${this.message}")`;
+      const path8 = pipe(this.path, join(options.pathDelim));
+      return `(Missing data at ${path8}: "${this.message}")`;
     }
   });
   return error;
 };
-var SourceUnavailable = (path6, message, cause3, options = {
+var SourceUnavailable = (path7, message, cause3, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_SOURCE_UNAVAILABLE;
-  error.path = path6;
+  error.path = path7;
   error.message = message;
   error.cause = cause3;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path7 = pipe(this.path, join(options.pathDelim));
-      return `(Source unavailable at ${path7}: "${this.message}")`;
+      const path8 = pipe(this.path, join(options.pathDelim));
+      return `(Source unavailable at ${path8}: "${this.message}")`;
     }
   });
   return error;
 };
-var Unsupported = (path6, message, options = {
+var Unsupported = (path7, message, options = {
   pathDelim: "."
 }) => {
   const error = Object.create(proto2);
   error._op = OP_UNSUPPORTED;
-  error.path = path6;
+  error.path = path7;
   error.message = message;
   Object.defineProperty(error, "toString", {
     enumerable: false,
     value() {
-      const path7 = pipe(this.path, join(options.pathDelim));
-      return `(Unsupported operation at ${path7}: "${this.message}")`;
+      const path8 = pipe(this.path, join(options.pathDelim));
+      return `(Unsupported operation at ${path8}: "${this.message}")`;
     }
   });
   return error;
@@ -5874,9 +5874,9 @@ var reduceWithContext2 = /* @__PURE__ */ dual(3, (self, context4, reducer) => {
 var empty19 = {
   _tag: "Empty"
 };
-var patch5 = /* @__PURE__ */ dual(2, (path6, patch9) => {
+var patch5 = /* @__PURE__ */ dual(2, (path7, patch9) => {
   let input = of3(patch9);
-  let output = path6;
+  let output = path7;
   while (isCons(input)) {
     const patch10 = input.head;
     switch (patch10._tag) {
@@ -5944,7 +5944,7 @@ var make21 = (options) => ({
 var makeFlat = (options) => ({
   [FlatConfigProviderTypeId]: FlatConfigProviderTypeId,
   patch: options.patch,
-  load: (path6, config, split = true) => options.load(path6, config, split),
+  load: (path7, config, split = true) => options.load(path7, config, split),
   enumerateChildren: options.enumerateChildren
 });
 var fromFlat = (flat) => make21({
@@ -5962,29 +5962,29 @@ var fromEnv = (options) => {
     pathDelim: "_",
     seqDelim: ","
   }, options);
-  const makePathString = (path6) => pipe(path6, join(pathDelim));
+  const makePathString = (path7) => pipe(path7, join(pathDelim));
   const unmakePathString = (pathString) => pathString.split(pathDelim);
   const getEnv = () => typeof process !== "undefined" && "env" in process && typeof process.env === "object" ? process.env : {};
-  const load = (path6, primitive, split = true) => {
-    const pathString = makePathString(path6);
+  const load = (path7, primitive, split = true) => {
+    const pathString = makePathString(path7);
     const current = getEnv();
     const valueOpt = pathString in current ? some2(current[pathString]) : none2();
-    return pipe(valueOpt, mapError(() => MissingData(path6, `Expected ${pathString} to exist in the process context`)), flatMap7((value) => parsePrimitive(value, path6, primitive, seqDelim, split)));
+    return pipe(valueOpt, mapError(() => MissingData(path7, `Expected ${pathString} to exist in the process context`)), flatMap7((value) => parsePrimitive(value, path7, primitive, seqDelim, split)));
   };
-  const enumerateChildren = (path6) => sync(() => {
+  const enumerateChildren = (path7) => sync(() => {
     const current = getEnv();
     const keys5 = Object.keys(current);
     const keyPaths = keys5.map((value) => unmakePathString(value.toUpperCase()));
     const filteredKeyPaths = keyPaths.filter((keyPath) => {
-      for (let i = 0; i < path6.length; i++) {
-        const pathComponent = pipe(path6, unsafeGet(i));
+      for (let i = 0; i < path7.length; i++) {
+        const pathComponent = pipe(path7, unsafeGet(i));
         const currentElement = keyPath[i];
         if (currentElement === void 0 || pathComponent !== currentElement) {
           return false;
         }
       }
       return true;
-    }).flatMap((keyPath) => keyPath.slice(path6.length, path6.length + 1));
+    }).flatMap((keyPath) => keyPath.slice(path7.length, path7.length + 1));
     return fromIterable5(filteredKeyPaths);
   });
   return fromFlat(makeFlat({
@@ -6000,25 +6000,25 @@ var extend = (leftDef, rightDef, left3, right3) => {
   const rightExtension = concat(right3, rightPad);
   return [leftExtension, rightExtension];
 };
-var appendConfigPath = (path6, config) => {
+var appendConfigPath = (path7, config) => {
   let op = config;
   if (op._tag === "Nested") {
-    const out = path6.slice();
+    const out = path7.slice();
     while (op._tag === "Nested") {
       out.push(op.name);
       op = op.config;
     }
     return out;
   }
-  return path6;
+  return path7;
 };
 var RedactedConfigErrorReducer = {
   andCase: (_, left3, right3) => And(left3, right3),
   orCase: (_, left3, right3) => Or(left3, right3),
-  invalidDataCase: (_, path6) => InvalidData(path6, "<redacted>"),
-  missingDataCase: (_, path6) => MissingData(path6, "<redacted>"),
-  sourceUnavailableCase: (_, path6, _message, cause3) => SourceUnavailable(path6, "<redacted>", cause3),
-  unsupportedCase: (_, path6) => Unsupported(path6, "<redacted>")
+  invalidDataCase: (_, path7) => InvalidData(path7, "<redacted>"),
+  missingDataCase: (_, path7) => MissingData(path7, "<redacted>"),
+  sourceUnavailableCase: (_, path7, _message, cause3) => SourceUnavailable(path7, "<redacted>", cause3),
+  unsupportedCase: (_, path7) => Unsupported(path7, "<redacted>")
 };
 var redactConfigError = (error) => reduceWithContext2(error, void 0, RedactedConfigErrorReducer);
 var fromFlatLoop = (flat, prefix, config, split) => {
@@ -6098,8 +6098,8 @@ var fromFlatLoop = (flat, prefix, config, split) => {
           return fail2(right3.left);
         }
         if (isRight2(left3) && isRight2(right3)) {
-          const path6 = pipe(prefix, join("."));
-          const fail6 = fromFlatLoopFail(prefix, path6);
+          const path7 = pipe(prefix, join("."));
+          const fail6 = fromFlatLoopFail(prefix, path7);
           const [lefts, rights] = extend(fail6, fail6, pipe(left3.right, map2(right2)), pipe(right3.right, map2(right2)));
           return pipe(lefts, zip(rights), forEachSequential(([left4, right4]) => pipe(zip2(left4, right4), map8(([left5, right5]) => op.zip(left5, right5)))));
         }
@@ -6108,19 +6108,19 @@ var fromFlatLoop = (flat, prefix, config, split) => {
     }
   }
 };
-var fromFlatLoopFail = (prefix, path6) => (index) => left2(MissingData(prefix, `The element at index ${index} in a sequence at path "${path6}" was missing`));
+var fromFlatLoopFail = (prefix, path7) => (index) => left2(MissingData(prefix, `The element at index ${index} in a sequence at path "${path7}" was missing`));
 var splitPathString = (text, delim) => {
   const split = text.split(new RegExp(`\\s*${escape(delim)}\\s*`));
   return split;
 };
-var parsePrimitive = (text, path6, primitive, delimiter, split) => {
+var parsePrimitive = (text, path7, primitive, delimiter, split) => {
   if (!split) {
     return pipe(primitive.parse(text), mapBoth({
-      onFailure: prefixed(path6),
+      onFailure: prefixed(path7),
       onSuccess: of
     }));
   }
-  return pipe(splitPathString(text, delimiter), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path6)));
+  return pipe(splitPathString(text, delimiter), forEachSequential((char) => primitive.parse(char.trim())), mapError(prefixed(path7)));
 };
 var transpose = (array3) => {
   return Object.keys(array3[0]).map((column) => array3.map((row) => row[column]));
@@ -15532,8 +15532,154 @@ function doctor(opts = {}) {
   return Effect_exports.map(scan(opts), auditReport);
 }
 
-// src/snapshot.ts
+// src/shadowed.ts
+import * as fs4 from "node:fs";
+import * as path5 from "node:path";
+
+// src/verify.ts
 import * as fs3 from "node:fs";
+
+// src/providers/posix.ts
+import * as path3 from "node:path";
+function expand2(entry, env) {
+  const tilde = entry === "~" || entry.startsWith("~/") ? (env.HOME ?? "") + entry.slice(1) : entry;
+  return tilde.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (whole, braced, plain) => {
+    const name = braced ?? plain;
+    return env[name] ?? whole;
+  });
+}
+var MACHINE_PREFIXES = ["/usr", "/bin", "/sbin", "/opt", "/etc", "/lib"];
+var posixProvider = {
+  expandTokens: expand2,
+  scopeOf(entry, env) {
+    const p = entry.toLowerCase();
+    const home = env.HOME ? env.HOME.toLowerCase() : null;
+    if (home && (p === home || p.startsWith(home + "/"))) return "user";
+    if (MACHINE_PREFIXES.some((m) => p === m || p.startsWith(m + "/"))) return "machine";
+    if (!path3.posix.isAbsolute(entry)) return "unknown";
+    return "unknown";
+  }
+};
+
+// src/providers/win32.ts
+import * as path4 from "node:path";
+function expand3(entry, env) {
+  return entry.replace(/%([^%]+)%/g, (whole, name) => env[name] ?? whole);
+}
+var MACHINE_PREFIX_FALLBACK = [
+  "C:\\Program Files",
+  "C:\\Program Files (x86)",
+  "C:\\ProgramData",
+  "C:\\Windows"
+];
+function machinePrefixes(env) {
+  const derived = [
+    env.ProgramFiles,
+    env["ProgramFiles(x86)"],
+    env.ProgramData,
+    env.SystemRoot ?? env.windir ?? env.WINDIR
+  ].filter((v) => typeof v === "string" && v.length > 0);
+  return derived.length > 0 ? derived : MACHINE_PREFIX_FALLBACK;
+}
+var win32Provider = {
+  expandTokens: expand3,
+  scopeOf(entry, env) {
+    const p = entry.toLowerCase();
+    const profile = env.USERPROFILE ? expand3("%USERPROFILE%", env).toLowerCase() : null;
+    if (profile && (p === profile || p.startsWith(profile + "\\"))) return "user";
+    const isMachine = machinePrefixes(env).some((m) => {
+      const lm = m.toLowerCase().replace(/[\\/]+$/, "");
+      return p === lm || p.startsWith(lm + "\\");
+    });
+    if (isMachine) return "machine";
+    if (!path4.win32.isAbsolute(entry)) return "unknown";
+    return "unknown";
+  }
+};
+
+// src/verify.ts
+function providerFor(platform) {
+  return platform === "win32" ? win32Provider : posixProvider;
+}
+function parseEntriesFile(text) {
+  return text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0 && !l.startsWith("#"));
+}
+function existsCaseInsensitive(dir) {
+  if (fs3.existsSync(dir)) return true;
+  if (process.platform !== "win32") return false;
+  const parent = dir.replace(/[\\/]+$/, "").replace(/[\\/][^\\/]+$/, "");
+  const base = dir.slice(parent.length + 1).toLowerCase();
+  try {
+    return fs3.readdirSync(parent).some((e) => e.toLowerCase() === base);
+  } catch {
+    return false;
+  }
+}
+function verifyEntries(text, platform, env) {
+  const provider = providerFor(platform);
+  const entries2 = [];
+  for (const raw of parseEntriesFile(text)) {
+    const expanded = provider.expandTokens(raw, env);
+    const scope3 = provider.scopeOf(expanded, env);
+    if (/%[^%]+%/.test(expanded) || /\$\{[^}]*\}/.test(expanded)) {
+      entries2.push({ raw, expanded, scope: scope3, exists: false, problem: "unexpanded token(s) in entry" });
+      continue;
+    }
+    if (existsCaseInsensitive(expanded)) {
+      entries2.push({ raw, expanded, scope: scope3, exists: true });
+    } else {
+      entries2.push({ raw, expanded, scope: scope3, exists: false, problem: "path does not exist" });
+    }
+  }
+  return {
+    ok: entries2.every((e) => e.exists),
+    platform,
+    checked: entries2.length,
+    entries: entries2
+  };
+}
+
+// src/shadowed.ts
+var SEP = (platform) => platform === "win32" ? ";" : ":";
+function shadowedNames(report, platform, env) {
+  const provider = providerFor(platform);
+  const ex = extSet(platform, env);
+  const byName = /* @__PURE__ */ new Map();
+  const dirs = (env.PATH ?? "").split(SEP(platform)).map((d) => d.trim()).filter(Boolean);
+  for (const rawDir of dirs) {
+    const dir = provider.expandTokens(rawDir, env);
+    let items;
+    try {
+      items = fs4.readdirSync(dir, { withFileTypes: true });
+    } catch {
+      continue;
+    }
+    for (const it of items) {
+      if (it.isDirectory() || it.isSymbolicLink()) continue;
+      const full = path5.join(dir, it.name);
+      if (!isExecutable(full, ex)) continue;
+      const key = toolName(full, ex).toLowerCase();
+      const list = byName.get(key) ?? [];
+      list.push({ path: full, scope: provider.scopeOf(full, env) });
+      byName.set(key, list);
+    }
+  }
+  const shadowed = [];
+  for (const [key, hits] of byName) {
+    const distinct = hits.filter((h, i) => hits.findIndex((x) => x.path.toLowerCase() === h.path.toLowerCase()) === i);
+    if (distinct.length >= 2) shadowed.push({ name: key, hits: distinct });
+  }
+  shadowed.sort((a, b) => a.name.localeCompare(b.name));
+  return {
+    ok: shadowed.length === 0,
+    platform,
+    checked: dirs.length,
+    shadowed
+  };
+}
+
+// src/snapshot.ts
+import * as fs5 from "node:fs";
 function snapshotFrom(report, platform, date = (/* @__PURE__ */ new Date()).toISOString()) {
   return {
     format: "toolscan-snapshot/1",
@@ -15547,7 +15693,7 @@ function snapshotFrom(report, platform, date = (/* @__PURE__ */ new Date()).toIS
 function loadSnapshot(file) {
   let raw;
   try {
-    raw = fs3.readFileSync(file, "utf8");
+    raw = fs5.readFileSync(file, "utf8");
   } catch (err) {
     throw new Error(`${file} cannot be read: ${err.message}`);
   }
@@ -15579,7 +15725,7 @@ function loadSnapshot(file) {
   return parsed;
 }
 function writeSnapshot(file, snapshot) {
-  fs3.writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
+  fs5.writeFileSync(file, `${JSON.stringify(snapshot, null, 2)}
 `, "utf8");
 }
 function diffTools(a, b, options = {}) {
@@ -15588,11 +15734,11 @@ function diffTools(a, b, options = {}) {
   const added = [];
   const removed = [];
   const changed = [];
-  for (const [name, path6] of bm) {
-    if (!am.has(name)) added.push({ name, path: path6 });
+  for (const [name, path7] of bm) {
+    if (!am.has(name)) added.push({ name, path: path7 });
   }
-  for (const [name, path6] of am) {
-    if (!bm.has(name)) removed.push({ name, path: path6 });
+  for (const [name, path7] of am) {
+    if (!bm.has(name)) removed.push({ name, path: path7 });
   }
   for (const [name, to] of bm) {
     const from = am.get(name);
@@ -15626,96 +15772,6 @@ function diffTools(a, b, options = {}) {
   return { ok: added.length + removed.length + changed.length + moved.length === 0, added, removed, changed, moved };
 }
 
-// src/verify.ts
-import * as fs4 from "node:fs";
-
-// src/providers/posix.ts
-import * as path3 from "node:path";
-function expand2(entry, env) {
-  const tilde = entry === "~" || entry.startsWith("~/") ? (env.HOME ?? "") + entry.slice(1) : entry;
-  return tilde.replace(/\$\{([^}]+)\}|\$([A-Za-z_][A-Za-z0-9_]*)/g, (whole, braced, plain) => {
-    const name = braced ?? plain;
-    return env[name] ?? whole;
-  });
-}
-var MACHINE_PREFIXES = ["/usr", "/bin", "/sbin", "/opt", "/etc", "/lib"];
-var posixProvider = {
-  expandTokens: expand2,
-  scopeOf(entry, env) {
-    const p = entry.toLowerCase();
-    const home = env.HOME ? env.HOME.toLowerCase() : null;
-    if (home && (p === home || p.startsWith(home + "/"))) return "user";
-    if (MACHINE_PREFIXES.some((m) => p === m || p.startsWith(m + "/"))) return "machine";
-    if (!path3.posix.isAbsolute(entry)) return "unknown";
-    return "unknown";
-  }
-};
-
-// src/providers/win32.ts
-import * as path4 from "node:path";
-function expand3(entry, env) {
-  return entry.replace(/%([^%]+)%/g, (whole, name) => env[name] ?? whole);
-}
-var MACHINE_PREFIXES2 = [
-  "C:\\Program Files",
-  "C:\\Program Files (x86)",
-  "C:\\ProgramData",
-  "C:\\Windows"
-];
-var win32Provider = {
-  expandTokens: expand3,
-  scopeOf(entry, env) {
-    const p = entry.toLowerCase();
-    const profile = env.USERPROFILE ? expand3("%USERPROFILE%", env).toLowerCase() : null;
-    if (profile && (p === profile || p.startsWith(profile + "\\"))) return "user";
-    if (MACHINE_PREFIXES2.some((m) => p.startsWith(m.toLowerCase()))) return "machine";
-    if (!path4.win32.isAbsolute(entry)) return "unknown";
-    return "unknown";
-  }
-};
-
-// src/verify.ts
-function providerFor(platform) {
-  return platform === "win32" ? win32Provider : posixProvider;
-}
-function parseEntriesFile(text) {
-  return text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 0 && !l.startsWith("#"));
-}
-function existsCaseInsensitive(dir) {
-  if (fs4.existsSync(dir)) return true;
-  if (process.platform !== "win32") return false;
-  const parent = dir.replace(/[\\/]+$/, "").replace(/[\\/][^\\/]+$/, "");
-  const base = dir.slice(parent.length + 1).toLowerCase();
-  try {
-    return fs4.readdirSync(parent).some((e) => e.toLowerCase() === base);
-  } catch {
-    return false;
-  }
-}
-function verifyEntries(text, platform, env) {
-  const provider = providerFor(platform);
-  const entries2 = [];
-  for (const raw of parseEntriesFile(text)) {
-    const expanded = provider.expandTokens(raw, env);
-    const scope3 = provider.scopeOf(expanded, env);
-    if (/%[^%]+%/.test(expanded) || /\$\{[^}]*\}/.test(expanded)) {
-      entries2.push({ raw, expanded, scope: scope3, exists: false, problem: "unexpanded token(s) in entry" });
-      continue;
-    }
-    if (existsCaseInsensitive(expanded)) {
-      entries2.push({ raw, expanded, scope: scope3, exists: true });
-    } else {
-      entries2.push({ raw, expanded, scope: scope3, exists: false, problem: "path does not exist" });
-    }
-  }
-  return {
-    ok: entries2.every((e) => e.exists),
-    platform,
-    checked: entries2.length,
-    entries: entries2
-  };
-}
-
 // src/cli.ts
 var VERSION = "2.0.0";
 function usage() {
@@ -15734,6 +15790,10 @@ Commands:
                                  baseline; exit 1 when the machine drifted (2 = truncated)
   toolscan doctor                one-shot invariant oracle over a live scan (exit 1
                                  when any check fails; 2 when the scan truncated)
+  toolscan scan --shadowed       report names present in several PATH scopes with
+                                 DIFFERENT targets (shadowed names; exit 1 when any
+                                 found, 2 when the scan truncated) \u2014 case-insensitive
+                                 on win32, scope-classified via the provider seam
 
 Flags: --name GLOB --roots A,B --no-path --no-roots --depth N --max-ms N
        --max-files N --format json|text --moves (diff: detect renames by
@@ -15780,7 +15840,8 @@ function parseArgs(argv) {
     baseline: value("--baseline"),
     entries: value("--entries"),
     format: value("--format") === "text" ? "text" : "json",
-    moves: argv.includes("--moves")
+    moves: argv.includes("--moves"),
+    shadowed: argv.includes("--shadowed")
   };
 }
 var runScan = (options) => scan(options);
@@ -15830,7 +15891,7 @@ async function main(argv = process.argv.slice(2)) {
     }
     case "snapshot": {
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
-      const file = args2.out || path5.join(process.cwd(), "toolscan-snapshot.json");
+      const file = args2.out || path6.join(process.cwd(), "toolscan-snapshot.json");
       writeSnapshot(file, snapshotFrom(report, process.platform));
       if (!args2.quiet) console.log(file);
       process.exit(report.truncated ? 2 : 0);
@@ -15858,7 +15919,7 @@ async function main(argv = process.argv.slice(2)) {
         usage();
         process.exit(2);
       }
-      const names = fs5.readFileSync(args2.from, "utf8").split(/[\s,]+/).filter(Boolean);
+      const names = fs6.readFileSync(args2.from, "utf8").split(/[\s,]+/).filter(Boolean);
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
       refuseTruncated(report.truncated, "missing");
       const have = new Set(report.tools.map((t) => t.name.toLowerCase()));
@@ -15898,7 +15959,7 @@ async function main(argv = process.argv.slice(2)) {
       }
       let text;
       try {
-        text = fs5.readFileSync(args2.entries, "utf8");
+        text = fs6.readFileSync(args2.entries, "utf8");
       } catch (err) {
         fail5(`verify: cannot read entries file ${args2.entries}: ${err.message}`, 1);
       }
@@ -15916,6 +15977,13 @@ async function main(argv = process.argv.slice(2)) {
     case "scan":
     default: {
       const report = await Effect_exports.runPromise(runScan(args2.scanOptions));
+      if (args2.shadowed) {
+        refuseTruncated(report.truncated, "scan --shadowed");
+        const out = shadowedNames(report, process.platform, process.env);
+        console.log(JSON.stringify(out, null, 2));
+        process.exit(out.ok ? 0 : 1);
+        break;
+      }
       if (args2.quiet) {
         for (const t of report.tools) console.log(t.name);
       } else if (args2.format === "text") {
